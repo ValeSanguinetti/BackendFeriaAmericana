@@ -1,0 +1,33 @@
+{
+  "name": "backendferiaamericana",
+  "version": "1.0.0",
+  "description": "Feria Americana Store Backend.",
+  "homepage": "https://github.com/ValeSanguinetti/BackendFeriaAmericana#readme",
+  "bugs": {
+    "url": "https://github.com/ValeSanguinetti/BackendFeriaAmericana/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ValeSanguinetti/BackendFeriaAmericana.git"
+  },
+  "license": "MIT",
+  "author": "ValeSanguinetti & Duran24062005",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.6.0",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
+  }
+}
