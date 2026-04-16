@@ -50,6 +50,8 @@ Ese archivo contiene:
 - indices
 - bloque de datos de prueba
 
+La representacion de este mismo modelo en Prisma se encuentra en [prisma/schema.prisma](/home/alexi-dg/Desktop/GitHub_Repositories/Feria-Americana-Store/BackendFeriaAmericana/prisma/schema.prisma:1), y el cliente generado queda disponible en `generated/prisma`.
+
 ---
 
 ## Entidades
