@@ -10,7 +10,8 @@ El backend tenía variables de entorno y estructura de configuración orientadas
 - cargar variables de entorno al inicializar la configuración
 - sustituir el contrato de variables de base de datos de Mongo por variables de Supabase
 - exponer un cliente singleton de Supabase desde `src/config/database/connection.ts`
-- actualizar el ejemplo de variables de entorno y la documentación base del backend
+- actualizar el ejemplo de variables de entorno y la documentacion del backend
+- separar la documentacion general del backend de la documentacion especifica de base de datos
 
 ## Enfoque de implementación
 
@@ -19,6 +20,7 @@ El backend tenía variables de entorno y estructura de configuración orientadas
 - modelar `database` con `url` y `key` para el cliente de Supabase
 - crear el cliente con `createClient(url, key)` y exportarlo como singleton
 - mantener validaciones mínimas para producción sobre secretos y credenciales requeridas
+- documentar el modelo SQL y los datos de prueba en `database/README.md`
 
 ## Actores afectados
 
@@ -43,3 +45,8 @@ El backend tenía variables de entorno y estructura de configuración orientadas
 - si la clave de Supabase no corresponde al entorno esperado, el backend fallará en runtime al consultar datos
 - si el frontend o despliegue siguen usando variables viejas de Mongo, el arranque quedará desalineado
 - si se requiere una distinción entre anon key y service role key, el contrato actual deberá refinarse
+
+## Resultado de documentacion
+
+- `README.md` conserva el contexto general del backend
+- `database/README.md` documenta el modelo relacional, las entidades, relaciones, decisiones tecnicas y datos de prueba de la base de datos
