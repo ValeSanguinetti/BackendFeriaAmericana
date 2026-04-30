@@ -1,62 +1,19 @@
 # Base de Datos Feria Americana
 
-Documentacion especifica del modelo de datos relacional usado por Feria Americana Store en PostgreSQL/Supabase.
-
----
-
-## Indice
-
-1. [Introduccion](#introduccion)
-2. [Contexto del modelo](#contexto-del-modelo)
-3. [Archivo principal](#archivo-principal)
-4. [Entidades](#entidades)
-5. [Relaciones](#relaciones)
-6. [Decisiones tecnicas](#decisiones-tecnicas)
-7. [Datos de prueba](#datos-de-prueba)
-
----
+Documentacion especifica del modelo PostgreSQL usado por Feria Americana Store.
 
 ## Introduccion
 
-La base de datos de Feria Americana Store fue diseñada para soportar operaciones de ecommerce centradas en usuarios, productos, carrito, listas de deseos y pedidos. El objetivo del modelo es mantener integridad referencial, permitir consultas consistentes y facilitar futuras integraciones desde el backend.
+La base de datos soporta operaciones de ecommerce centradas en usuarios, productos, carrito, listas de deseos y pedidos. El modelo usa tablas relacionales de PostgreSQL y Prisma como ORM tipado desde el backend.
 
-Este caso de uso no pertenece a un sistema academico ni a un dominio educativo. Toda la documentacion de este directorio esta enfocada exclusivamente en el funcionamiento de la tienda.
+La fuente de verdad tecnica esta en:
 
----
+- [prisma/schema.prisma](/home/alexi-dg/Desktop/GitHub_Repositories/Feria-Americana-Store/BackendFeriaAmericana/prisma/schema.prisma:1)
+- [prisma/migrations](/home/alexi-dg/Desktop/GitHub_Repositories/Feria-Americana-Store/BackendFeriaAmericana/prisma/migrations)
 
-## Contexto del modelo
+## Tablas
 
-El sistema necesita resolver estas operaciones principales:
-
-- registrar usuarios y controlar su estado
-- gestionar un catalogo de productos con precio, stock y categoria
-- permitir un carrito activo por usuario
-- guardar listas de deseos con productos favoritos
-- registrar pedidos y el detalle de cada compra
-
-El diseño relacional se eligio para asegurar reglas claras entre entidades y evitar inconsistencias al momento de comprar, actualizar stock o consultar historiales.
-
----
-
-## Archivo principal
-
-El esquema y los datos de prueba estan definidos en [feria-americana.sql](/home/alexi-dg/Desktop/GitHub_Repositories/Feria-Americana-Store/BackendFeriaAmericana/database/feria-americana.sql:1).
-
-Ese archivo contiene:
-
-- creacion de tablas
-- claves primarias y foraneas
-- restricciones `check`
-- indices
-- bloque de datos de prueba
-
-La representacion de este mismo modelo en Prisma se encuentra en [prisma/schema.prisma](/home/alexi-dg/Desktop/GitHub_Repositories/Feria-Americana-Store/BackendFeriaAmericana/prisma/schema.prisma:1), y el cliente generado queda disponible en `generated/prisma`.
-
----
-
-## Entidades
-
-### 1. `usuarios`
+### `usuarios`
 
 Representa a las personas que interactuan con la plataforma.
 
@@ -67,15 +24,15 @@ Campos principales:
 - `email`
 - `contrasena`
 - `telefono`
-- `fecha_registro`
 - `estado`
+- `fecha_registro`
 
 Reglas:
 
 - `email` es unico
-- `estado` permite controlar disponibilidad logica del usuario
+- `estado` permite `activo` o `inactivo`
 
-### 2. `productos`
+### `productos`
 
 Catalogo principal de articulos publicados.
 
@@ -93,10 +50,11 @@ Reglas:
 
 - `precio >= 0`
 - `stock >= 0`
+- existe indice por `categoria`
 
-### 3. `carrito`
+### `carrito`
 
-Carrito activo del usuario.
+Carrito activo de un usuario.
 
 Campos principales:
 
@@ -105,13 +63,14 @@ Campos principales:
 - `fecha_creacion`
 - `fecha_actualizacion`
 
-Regla:
+Reglas:
 
-- un usuario solo puede tener un carrito activo, por eso `id_usuario` es `unique`
+- un usuario solo puede tener un carrito activo
+- al eliminar un usuario, se elimina su carrito
 
-### 4. `carrito_items`
+### `carrito_items`
 
-Detalle de productos agregados al carrito.
+Productos agregados al carrito.
 
 Campos principales:
 
@@ -125,9 +84,11 @@ Reglas:
 
 - `cantidad > 0`
 - `precio_unitario >= 0`
-- no se permite repetir el mismo producto en el mismo carrito
+- un producto no se repite dentro del mismo carrito
+- al eliminar el carrito, se eliminan sus items
+- no se permite eliminar un producto referenciado por items de carrito
 
-### 5. `lista_deseos`
+### `lista_deseos`
 
 Listas de productos guardados por un usuario.
 
@@ -138,9 +99,14 @@ Campos principales:
 - `nombre`
 - `fecha_creacion`
 
-### 6. `lista_deseos_items`
+Reglas:
 
-Relacion entre listas de deseos y productos.
+- existe indice por usuario
+- al eliminar un usuario, se eliminan sus listas
+
+### `lista_deseos_items`
+
+Productos guardados en una lista de deseos.
 
 Campos principales:
 
@@ -149,7 +115,12 @@ Campos principales:
 - `id_producto`
 - `fecha_agregado`
 
-### 7. `pedidos`
+Reglas:
+
+- un producto no se repite dentro de la misma lista
+- al eliminar la lista, se eliminan sus items
+
+### `pedidos`
 
 Registro de compras confirmadas.
 
@@ -165,11 +136,12 @@ Campos principales:
 Reglas:
 
 - `total >= 0`
-- conserva la relacion con el usuario para trazabilidad comercial
+- `estado` permite `pendiente`, `pagado`, `enviado` o `cancelado`
+- no se permite eliminar un usuario con pedidos asociados
 
-### 8. `pedido_items`
+### `pedido_items`
 
-Detalle de productos comprados dentro de cada pedido.
+Productos comprados dentro de un pedido.
 
 Campos principales:
 
@@ -183,82 +155,16 @@ Reglas:
 
 - `cantidad > 0`
 - `precio_unitario >= 0`
-- no se repite el mismo producto dentro del mismo pedido
-
----
-
-## Relaciones
-
-Relaciones principales del modelo:
-
-- `usuarios` 1:1 `carrito`
-- `usuarios` 1:N `lista_deseos`
-- `usuarios` 1:N `pedidos`
-- `carrito` 1:N `carrito_items`
-- `lista_deseos` 1:N `lista_deseos_items`
-- `pedidos` 1:N `pedido_items`
-- `productos` participa como referencia en `carrito_items`, `lista_deseos_items` y `pedido_items`
-
-Esto permite separar claramente:
-
-- el estado temporal de compra en `carrito`
-- la intencion de compra o favoritos en `lista_deseos`
-- la compra ya cerrada en `pedidos`
-
----
+- un producto no se repite dentro del mismo pedido
+- al eliminar el pedido, se eliminan sus items
+- no se permite eliminar un producto referenciado por items de pedido
 
 ## Decisiones tecnicas
 
-### Integridad referencial
+Los items de carrito, listas de deseos y pedidos se modelan como tablas independientes porque PostgreSQL mantiene la integridad referencial, permite indices por producto y evita estructuras embebidas no normalizadas.
 
-Se usaron claves foraneas para garantizar que los items dependan de registros validos de usuario, carrito, lista, pedido y producto.
+Los estados de usuarios y pedidos se modelan como enums de Prisma/PostgreSQL para que el dominio quede restringido tanto en TypeScript como en la base de datos.
 
-### Estrategia de borrado
+Los valores monetarios usan `Decimal(12, 2)` para evitar errores de precision de punto flotante.
 
-- `carrito` y `lista_deseos` usan `on delete cascade` porque dependen operativamente del usuario
-- los items de carrito, lista y pedido dependen de sus entidades padre
-- en `pedidos` se conserva una relacion mas estricta para no perder historial comercial
-
-### Restricciones de negocio
-
-Se agregaron validaciones `check` para cantidades, precios, stock y total.
-
-### Indices creados
-
-- `idx_productos_categoria`
-- `idx_lista_deseos_usuario`
-- `idx_pedidos_usuario`
-- `idx_carrito_items_producto`
-- `idx_pedido_items_producto`
-
-Estos indices ayudan a consultas comunes por categoria, usuario y producto.
-
----
-
-## Datos de prueba
-
-El esquema incluye un bloque de seed para poblar el entorno con ejemplos iniciales.
-
-Contenido del seed:
-
-- 3 usuarios
-- 5 productos
-- 2 carritos
-- 3 listas de deseos
-- items en carrito
-- items en listas de deseos
-- 2 pedidos
-- items asociados a pedidos
-
-Objetivo del seed:
-
-- probar joins basicos
-- validar claves foraneas
-- ensayar flujos de carrito y pedido
-- contar con una base minima para desarrollo local
-
-Consideraciones:
-
-- las inserciones usan `on conflict do nothing` donde aplica
-- varias relaciones se arman mediante `select` para respetar ids generados
-- los datos son de prueba y no representan informacion productiva
+Las migraciones no se ejecutan automaticamente al arrancar el servidor. Deben aplicarse con `npm run prisma:migrate` en desarrollo o `npm run prisma:deploy` en entornos desplegados.
