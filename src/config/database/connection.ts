@@ -1,7 +1,28 @@
-import { createClient } from '@supabase/supabase-js';
-
 import appConfig from '../app.config.js';
+import prisma from '../../infrastructure/persistence/prisma/client.js';
 
-const supabase = createClient(appConfig.database.url, appConfig.database.key);
+let connectionPromise: Promise<void> | undefined;
 
-export default supabase;
+export const connectDatabase = async (): Promise<void> => {
+  if (!appConfig.database.url) {
+    throw new Error('DATABASE_URL is required to connect PostgreSQL');
+  }
+
+  connectionPromise ??= prisma.$connect();
+
+  try {
+    await connectionPromise;
+  } catch (error) {
+    connectionPromise = undefined;
+    throw error;
+  }
+};
+
+export const disconnectDatabase = async (): Promise<void> => {
+  await prisma.$disconnect();
+  connectionPromise = undefined;
+};
+
+export const databaseConnection = prisma;
+
+export default prisma;

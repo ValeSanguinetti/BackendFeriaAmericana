@@ -9,7 +9,6 @@ interface AppSection {
 
 interface DatabaseSection {
   url: string;
-  key: string;
 }
 
 interface JwtSection {
@@ -51,15 +50,14 @@ class AppConfig {
     }
 
     this.app = {
-      name: 'EduConnect Backend',
+      name: 'Feria Americana Backend',
       port: toNumber(process.env.PORT, 8000),
       nodeEnv: process.env.NODE_ENV ?? 'development',
       emailApiBase: process.env.EMAIL_API_BASE_URL ?? 'http://localhost:8000/'
     };
 
     this.database = {
-      url: process.env.SUPABASE_URL ?? '',
-      key: process.env.SUPABASE_KEY ?? ''
+      url: process.env.DATABASE_URL ?? ''
     };
 
     this.jwt = {
@@ -96,8 +94,8 @@ class AppConfig {
     }
 
     if (this.app.nodeEnv === 'production') {
-      if (!this.database.url || !this.database.key) {
-        throw new Error('SUPABASE_URL and SUPABASE_KEY are required in production');
+      if (!this.database.url) {
+        throw new Error('DATABASE_URL is required in production');
       }
 
       if (!this.storage.s3Bucket) {

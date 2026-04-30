@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../../../generated/prisma/index.js';
+import { PrismaClient } from '@prisma/client';
 
 type GlobalPrisma = typeof globalThis & {
   prisma?: PrismaClient;
@@ -29,4 +29,4 @@ export type {
   Prisma,
   Producto,
   Usuario
-} from '../../../../generated/prisma/index.js';
+} from '@prisma/client';

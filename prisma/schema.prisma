@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
 }
 
 datasource db {
@@ -8,14 +7,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum EstadoUsuario {
+  activo
+  inactivo
+}
+
+enum EstadoPedido {
+  pendiente
+  pagado
+  enviado
+  cancelado
+}
+
 model Usuario {
-  idUsuario     Int           @id @default(autoincrement()) @map("id_usuario")
-  nombre        String        @db.VarChar(150)
-  email         String        @unique @db.VarChar(255)
-  contrasena    String        @db.VarChar(255)
-  telefono      String?       @db.VarChar(30)
-  fechaRegistro DateTime      @default(now()) @map("fecha_registro") @db.Timestamptz(6)
-  estado        String        @default("activo") @db.VarChar(50)
+  idUsuario     Int            @id @default(autoincrement()) @map("id_usuario")
+  nombre        String         @db.VarChar(150)
+  email         String         @unique @db.VarChar(255)
+  contrasena    String         @db.VarChar(255)
+  telefono      String?        @db.VarChar(30)
+  fechaRegistro DateTime       @default(now()) @map("fecha_registro") @db.Timestamptz(6)
+  estado        EstadoUsuario  @default(activo)
   carrito       Carrito?
   listasDeseos  ListaDeseos[]
   pedidos       Pedido[]
@@ -24,13 +35,13 @@ model Usuario {
 }
 
 model Producto {
-  idProducto       Int               @id @default(autoincrement()) @map("id_producto")
-  nombre           String            @db.VarChar(180)
+  idProducto       Int                @id @default(autoincrement()) @map("id_producto")
+  nombre           String             @db.VarChar(180)
   descripcion      String?
-  precio           Decimal           @db.Decimal(12, 2)
-  stock            Int               @default(0)
-  categoria        String?           @db.VarChar(120)
-  fechaCreacion    DateTime          @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+  precio           Decimal            @db.Decimal(12, 2)
+  stock            Int                @default(0)
+  categoria        String?            @db.VarChar(120)
+  fechaCreacion    DateTime           @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
   carritoItems     CarritoItem[]
   listaDeseosItems ListaDeseosItem[]
   pedidoItems      PedidoItem[]
@@ -40,26 +51,14 @@ model Producto {
 }
 
 model Carrito {
-  idCarrito          Int           @id @default(autoincrement()) @map("id_carrito")
-  idUsuario          Int           @unique @map("id_usuario")
-  fechaCreacion      DateTime      @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
-  fechaActualizacion DateTime      @default(now()) @map("fecha_actualizacion") @db.Timestamptz(6)
-  usuario            Usuario       @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+  idCarrito          Int            @id @default(autoincrement()) @map("id_carrito")
+  idUsuario          Int            @unique @map("id_usuario")
+  fechaCreacion      DateTime       @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+  fechaActualizacion DateTime       @updatedAt @map("fecha_actualizacion") @db.Timestamptz(6)
+  usuario            Usuario        @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
   items              CarritoItem[]
 
   @@map("carrito")
-}
-
-model ListaDeseos {
-  idListaDeseos Int               @id @default(autoincrement()) @map("id_lista_deseos")
-  idUsuario     Int               @map("id_usuario")
-  nombre        String            @db.VarChar(150)
-  fechaCreacion DateTime          @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
-  usuario       Usuario           @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
-  items         ListaDeseosItem[]
-
-  @@index([idUsuario], map: "idx_lista_deseos_usuario")
-  @@map("lista_deseos")
 }
 
 model CarritoItem {
@@ -76,26 +75,39 @@ model CarritoItem {
   @@map("carrito_items")
 }
 
+model ListaDeseos {
+  idListaDeseos Int                @id @default(autoincrement()) @map("id_lista_deseos")
+  idUsuario     Int                @map("id_usuario")
+  nombre        String             @db.VarChar(150)
+  fechaCreacion DateTime           @default(now()) @map("fecha_creacion") @db.Timestamptz(6)
+  usuario       Usuario            @relation(fields: [idUsuario], references: [idUsuario], onDelete: Cascade)
+  items         ListaDeseosItem[]
+
+  @@index([idUsuario], map: "idx_lista_deseos_usuario")
+  @@map("lista_deseos")
+}
+
 model ListaDeseosItem {
-  idListaItem   Int         @id @default(autoincrement()) @map("id_lista_item")
-  idListaDeseos Int         @map("id_lista_deseos")
-  idProducto    Int         @map("id_producto")
-  fechaAgregado DateTime    @default(now()) @map("fecha_agregado") @db.Timestamptz(6)
-  listaDeseos   ListaDeseos @relation(fields: [idListaDeseos], references: [idListaDeseos], onDelete: Cascade)
-  producto      Producto    @relation(fields: [idProducto], references: [idProducto], onDelete: Cascade)
+  idListaItem   Int          @id @default(autoincrement()) @map("id_lista_item")
+  idListaDeseos Int          @map("id_lista_deseos")
+  idProducto    Int          @map("id_producto")
+  fechaAgregado DateTime     @default(now()) @map("fecha_agregado") @db.Timestamptz(6)
+  listaDeseos   ListaDeseos  @relation(fields: [idListaDeseos], references: [idListaDeseos], onDelete: Cascade)
+  producto      Producto     @relation(fields: [idProducto], references: [idProducto], onDelete: Cascade)
 
   @@unique([idListaDeseos, idProducto], map: "uq_lista_deseos_producto")
+  @@index([idProducto], map: "idx_lista_deseos_items_producto")
   @@map("lista_deseos_items")
 }
 
 model Pedido {
-  idPedido       Int          @id @default(autoincrement()) @map("id_pedido")
-  idUsuario      Int          @map("id_usuario")
-  fechaPedido    DateTime     @default(now()) @map("fecha_pedido") @db.Timestamptz(6)
-  total          Decimal      @default(0) @db.Decimal(12, 2)
-  estado         String       @default("pendiente") @db.VarChar(50)
-  direccionEnvio String       @map("direccion_envio")
-  usuario        Usuario      @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict)
+  idPedido       Int           @id @default(autoincrement()) @map("id_pedido")
+  idUsuario      Int           @map("id_usuario")
+  fechaPedido    DateTime      @default(now()) @map("fecha_pedido") @db.Timestamptz(6)
+  total          Decimal       @default(0) @db.Decimal(12, 2)
+  estado         EstadoPedido  @default(pendiente)
+  direccionEnvio String        @map("direccion_envio")
+  usuario        Usuario       @relation(fields: [idUsuario], references: [idUsuario], onDelete: Restrict)
   items          PedidoItem[]
 
   @@index([idUsuario], map: "idx_pedidos_usuario")
