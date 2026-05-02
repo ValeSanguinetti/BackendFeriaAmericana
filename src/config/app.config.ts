@@ -65,7 +65,7 @@ class AppConfig {
       expire: process.env.JWT_EXPIRE ?? '7d'
     };
 
-    const defaultCorsOrigins = ['http://localhost:3000'];
+    const defaultCorsOrigins = ['http://localhost:5173', 'http://localhost:3000'];
     const envCorsOrigins = (process.env.CORS_ORIGIN ?? process.env.FRONTEND_URL ?? '')
       .split(',')
       .map((origin) => origin.trim())
